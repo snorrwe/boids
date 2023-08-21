@@ -4,7 +4,7 @@ use engine::{
     assets::{self, Assets, Handle},
     camera::Camera3d,
     cecs::prelude::*,
-    glam::{Vec2, Vec3},
+    glam::{Quat, Vec2, Vec3},
     renderer::{
         self, camera_bundle,
         sprite_renderer::{self, SpriteSheet},
@@ -17,6 +17,7 @@ use engine::{
 struct Boid;
 
 struct Velocity(pub Vec3);
+struct LastVelocity(pub Vec3);
 
 struct BoidConfig {
     radius: f32,
@@ -26,34 +27,44 @@ struct BoidConfig {
 const N: usize = 1000;
 
 fn update_boids(
-    mut q: Query<(EntityId, &Transform, &mut Velocity), With<Boid>>,
+    mut q: Query<(EntityId, &mut Transform, &mut Velocity, &LastVelocity), With<Boid>>,
     positions: Query<(&GlobalTransform, EntityId), With<Boid>>,
     conf: Res<BoidConfig>,
+    dt: Res<DeltaTime>,
 ) {
     let radius = conf.radius;
     let sepa = conf.separation_radius;
-    q.par_for_each_mut(|(id, tr, vel)| {
+    let dt = dt.0.as_secs_f32();
+    q.par_for_each_mut(|(id, tr, vel, last_vel)| {
         let pos = tr.pos;
-        let mut dir = Vec3::ZERO;
+        let mut dir = -tr.pos.normalize_or_zero(); // move towards the center if no other
+                                                   // boids are in sight
         positions.iter().for_each(|(gtr, boid_id)| {
             if id == boid_id {
                 return;
             }
             let d = pos - gtr.0.pos;
             let mag = d.length();
-            if mag < radius {
+            if mag < radius && pos.dot(gtr.0.pos) > 0.0 {
                 let ratio = (mag / sepa).clamp(0.0, 1.0);
                 dir -= d * ratio;
             }
         });
-        vel.0 = dir;
+        vel.0 = dir.lerp(last_vel.0, 0.5);
+        tr.pos += vel.0 * dt;
     });
 }
 
-fn update_boids_pos(mut q: Query<(&mut Transform, &Velocity)>, dt: Res<DeltaTime>) {
-    let dt = dt.0.as_secs_f32();
-    q.par_for_each_mut(move |(tr, vel)| {
-        tr.pos += vel.0 * dt;
+fn sprite_rotate(mut q: Query<(&mut Transform, &Velocity)>) {
+    q.par_for_each_mut(|(tr, Velocity(vel))| {
+        let angle = -vel.x.atan2(vel.y);
+        tr.rot = Quat::from_rotation_z(angle);
+    });
+}
+
+fn update_boids_vel(mut q: Query<(&mut LastVelocity, &Velocity)>) {
+    q.par_for_each_mut(move |(l, vel)| {
+        l.0 = vel.0;
     });
 }
 
@@ -96,7 +107,11 @@ fn setup_boids(
                 Vec3::new(x, y, 0.0),
             )))
             .insert_bundle(sprite_renderer::sprite_sheet_bundle(boid.clone(), None))
-            .insert_bundle((Boid, Velocity(Vec3::new(vx, vy, 0.0))));
+            .insert_bundle((
+                Boid,
+                LastVelocity(Vec3::ZERO),
+                Velocity(Vec3::new(vx, vy, 0.0)),
+            ));
     }
 }
 
@@ -126,7 +141,8 @@ impl Plugin for GamePlugin {
     fn build(self, app: &mut App) {
         app.stage(Stage::Update)
             .add_system(update_boids)
-            .add_system(update_boids_pos.after(update_boids));
+            .add_system(update_boids_vel.after(update_boids))
+            .add_system(sprite_rotate.after(update_boids));
 
         app.add_startup_system(setup_boids);
         app.insert_resource(BoidConfig {
