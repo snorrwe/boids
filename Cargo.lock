@@ -340,7 +340,7 @@ dependencies = [
 [[package]]
 name = "cecs"
 version = "0.1.4"
-source = "git+https://github.com/caolo-game/cecs#3670a1499765d206f143796d1e95c2696229010a"
+source = "git+https://github.com/caolo-game/cecs#f01b09641f2fe4f6c1e6fad8516aa8a7cd66e0fb"
 dependencies = [
  "cache-padded",
  "crossbeam-deque",

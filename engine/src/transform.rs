@@ -173,7 +173,7 @@ fn update_root_transforms(mut root: Query<(&Transform, &mut GlobalTransform), Wi
 
 #[cfg(not(target_family = "wasm"))]
 fn update_child_transforms(
-    mut root: Query<(&Transform, &Children), WithOut<Parent>>,
+    root: Query<(&Transform, &Children), WithOut<Parent>>,
     qchildren: Query<(&Transform, &mut GlobalTransform, Option<&Children>)>,
     pool: Res<JobPool>,
 ) {
@@ -226,7 +226,7 @@ unsafe fn update_children_transforms_recursive(
 
 #[cfg(target_family = "wasm")]
 fn update_child_transforms(
-    mut root: Query<(&Transform, &Children), WithOut<Parent>>,
+    root: Query<(&Transform, &Children), WithOut<Parent>>,
     qchildren: Query<(&Transform, &mut GlobalTransform, Option<&Children>)>,
 ) {
     root.par_for_each(|(tr, children)| {
