@@ -22,6 +22,7 @@ struct LastVelocity(pub Vec3);
 struct BoidConfig {
     radius: f32,
     separation_radius: f32,
+    min_vel: f32,
 }
 
 const N: usize = 1000;
@@ -34,20 +35,21 @@ fn update_boids(
 ) {
     let radius = conf.radius;
     let sepa = conf.separation_radius;
+    let min_vel = conf.min_vel;
     let dt = dt.0.as_secs_f32();
     q.par_for_each_mut(|(id, tr, vel, last_vel)| {
         let pos = tr.pos;
-        let mut dir = -tr.pos.normalize_or_zero(); // move towards the center if no other
-                                                   // boids are in sight
+        let mut dir = -min_vel * tr.pos.normalize_or_zero(); // move towards the center if no other
+                                                             // boids are in sight
         positions.iter().for_each(|(gtr, boid_id)| {
             if id == boid_id {
                 return;
             }
             let d = pos - gtr.0.pos;
             let mag = d.length();
-            if mag < radius && pos.dot(gtr.0.pos) > 0.0 {
-                let ratio = (mag / sepa).clamp(0.0, 1.0);
-                dir -= d * ratio;
+            if mag < radius && vel.0.dot(d) < 0.0 {
+                let ratio = (mag / sepa).clamp(0.01, 1.0);
+                dir -= d / ratio;
             }
         });
         vel.0 = dir.lerp(last_vel.0, 0.5);
@@ -148,6 +150,7 @@ impl Plugin for GamePlugin {
         app.insert_resource(BoidConfig {
             radius: 30.0,
             separation_radius: 10.0,
+            min_vel: 10.0,
         });
     }
 }
