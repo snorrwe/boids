@@ -13,6 +13,7 @@ use engine::{
     transform::{self, transform_bundle, GlobalTransform, Transform},
     App, DefaultPlugins, DeltaTime, Plugin, Stage,
 };
+use tracing::info;
 
 struct Boid;
 
@@ -97,6 +98,7 @@ fn setup_boids(
         &mut assets,
     );
 
+    info!(N, "Spawning boids");
     for _ in 0..N {
         // TODO scale by map size
         let x = fastrand::f32();
