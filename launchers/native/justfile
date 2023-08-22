@@ -1,2 +1,5 @@
 watch:
     cargo watch -x r
+
+build flags="":
+    cargo b {{flags}}
