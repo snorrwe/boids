@@ -40,8 +40,8 @@ struct BoidConfig {
 const N: usize = 10000;
 
 fn update_boids(
-    mut q: Query<(EntityId, &mut Pos, &mut Velocity, &LastVelocity), With<Boid>>,
-    positions: Query<(&LastPos, EntityId), With<Boid>>,
+    mut q: Query<(&mut Pos, &mut Velocity, &LastVelocity), With<Boid>>,
+    positions: Query<&LastPos, With<Boid>>,
     conf: Res<BoidConfig>,
     dt: Res<DeltaTime>,
 ) {
@@ -49,14 +49,11 @@ fn update_boids(
     let sepa = conf.separation_radius;
     let min_vel = conf.min_vel;
     let dt = dt.0.as_secs_f32();
-    q.par_for_each_mut(|(id, tr, vel, last_vel)| {
+    q.par_for_each_mut(|(tr, vel, last_vel)| {
         let pos = tr.0;
         let mut dir = -min_vel * pos.normalize_or_zero(); // move towards the center if no other
                                                           // boids are in sight
-        positions.iter().for_each(|(gtr, boid_id)| {
-            if id == boid_id {
-                return;
-            }
+        positions.iter().for_each(|gtr| {
             let d = pos - gtr.0;
             let mag = d.length();
             if mag < radius && vel.0.dot(d) < 0.0 {
