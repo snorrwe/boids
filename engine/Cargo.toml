@@ -15,7 +15,7 @@ wasm = ["wgpu/webgl"]
 tracing = { version = "0.1.37" }
 cecs = { git = "https://github.com/caolo-game/cecs", default-features = false }
 anyhow = "1.0.75"
-bytemuck = { version = "1.13.1", features = ["derive"] }
+bytemuck = { version = "1.14.0", features = ["derive"] }
 fastrand = "2.0.0"
 glam = { version = "0.24.1", features = ["bytemuck"] }
 image = { version = "0.24.7", default-features = false, features = ["png"] }

@@ -206,15 +206,19 @@ impl App {
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(size) => {
-                            world.run_system(move |mut state: ResMut<GraphicsState>| {
-                                state.resize(size);
-                            });
+                            world
+                                .run_system(move |mut state: ResMut<GraphicsState>| {
+                                    state.resize(size);
+                                })
+                                .unwrap();
                         }
                         WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                             let size = *new_inner_size;
-                            world.run_system(move |mut state: ResMut<GraphicsState>| {
-                                state.resize(size);
-                            });
+                            world
+                                .run_system(move |mut state: ResMut<GraphicsState>| {
+                                    state.resize(size);
+                                })
+                                .unwrap();
                         }
 
                         WindowEvent::KeyboardInput { input, .. } => {
