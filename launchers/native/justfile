@@ -3,3 +3,6 @@ watch:
 
 build flags="":
     cargo b {{flags}}
+
+run flags="":
+    cargo r {{flags}}

@@ -5,3 +5,6 @@ watch-native:
 
 build-native flags="":
     just launchers/native/build {{flags}}
+
+run-native flags="":
+    just launchers/native/run {{flags}}
